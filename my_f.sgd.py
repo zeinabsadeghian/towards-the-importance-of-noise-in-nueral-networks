@@ -2,6 +2,7 @@ import math
 import torch
 from torch import Tensor
 from typing import List, Optional
+import numpy as np
 
 
 def sgd(params: List[Tensor],
@@ -36,5 +37,28 @@ def sgd(params: List[Tensor],
                 d_p = d_p.add(buf, alpha=momentum)
             else:
                 d_p = buf
+
+        if i == 0:
+            print("before")
+            print(d_p)
+            print("param")
+            print(param)
+            print("transpose")
+            transpose = torch.transpose(param, 0, 1)
+            print(transpose)
+            print("multiplication")
+            multiplication = torch.matmul(transpose, param)
+            print(multiplication)
+            print("diag")
+            npI = np.identity(multiplication.size()[0])
+            npI = npI.astype("float32")
+            I = torch.from_numpy(npI)
+            print(I)
+            print("t")
+            t = torch.sub(I, multiplication)
+            print(t)
+            d_p = torch.matmul(d_p, t)
+            print("after")
+            print(d_p)
 
         param.add_(d_p, alpha=-lr)
