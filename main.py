@@ -12,16 +12,10 @@ import torch.utils.data as Data
 
 import datetime
 import matplotlib.pyplot as plt
+import add_noise as an
+import create_noises as cn
 
-
-def initialization(model):
-    state_dict = model.state_dict()
-    for name, param in state_dict.items():
-        print("before")
-        print(param)
-        print(name)
-        tt = param + 0.9
-        state_dict[name].copy_(tt)
+data = np.random.normal(0, 1, 100)
 
 #Generating a data for training
 x = torch.unsqueeze(torch.linspace(-1, 1, 100), dim=1)  # x data (tensor), shape=(100, 1)
@@ -34,7 +28,6 @@ x, y = Variable(x), Variable(y)
 #Showing the generated Data
 plt.plot(x, y, color='orange', marker='o', linestyle='dashed')
 plt.show()
-
 
 # Design a simple neural network with just a hidden layer
 class simple_net(nn.Module):
@@ -53,11 +46,16 @@ class simple_net(nn.Module):
 
 # Create the network to train
 t_net = simple_net(num_hidden=10, num_input=1)
+#initialization(t_net)
 
-initialization(t_net)
-for name, param in t_net.state_dict().items():
-    print("after")
-    print(param)
+#a_star = 10
+#k = 20
+#big_epsilon, small_epsilon = cn.random_ep(p_a=3, p_w=1, a_size=output_layer_size, weights_size=hidden_layer_size)
+#print("big")
+#print(big_epsilon)
+#print("small")
+#print(small_epsilon)
+
 
 optimizer = torch.optim.SGD(t_net.parameters(), lr=0.2)
 loss_func = nn.MSELoss()
