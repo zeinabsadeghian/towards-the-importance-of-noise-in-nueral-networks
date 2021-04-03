@@ -3,5 +3,5 @@ def add_noise(model, big_epsilon, small_epsilon):
         if name == "hiddenLayer.weight":
             param = param.add(big_epsilon)
             print(param)
-        elif name == "outPut.weight":
+        elif name == "outPut2.weight":
             param = param.add(small_epsilon)
