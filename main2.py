@@ -18,27 +18,28 @@ import create_noises as cn
 #vasatie tedade chanel hast k baraye ma aval yeke
 #bad b tedad node haye hidden mishe
 #k = 10 #number of patches that we want to generate
-m = 5 #m is the dimension of filter
-d = 50 # d is the dimension of input
-k = d/m  #check the paper!
-k = int(k)
-
+m = 5 #m is the dimension of filter == p
+#d = 50 # d is the dimension of input
+k = 25
+d = k*m
+#k = int(k)
+batch_size = 5
 print("main2")
-data = np.random.normal(0, 1, (3, 50, 50))
+data = np.random.normal(0, 1, (batch_size, d))
 data = data.astype("float32")
 data = torch.from_numpy(data)
-data = data.reshape((3, 1, 50, 50))
-y = np.random.normal(0, 1, 3)
+data = data.reshape((batch_size, 1, d))
+y = np.random.normal(0, 1, batch_size)
 y = y.astype("float32")
 y = torch.from_numpy(y)
-y = y.reshape((3, 1))
+y = y.reshape((batch_size, 1))
 
 
 class Net(nn.Module):
-    def __init__(self, num_hidden, num_input=1, kernel=1):
+    def __init__(self, num_hidden, num_input=1, kernel=1, k=1):
         super(Net, self).__init__()
-        self.hiddenLayer = nn.Conv2d(in_channels=num_input, out_channels=num_hidden, kernel_size=kernel, stride=kernel)
-        self.outPut = nn.AvgPool2d(kernel_size=num_hidden)
+        self.hiddenLayer = nn.Conv1d(in_channels=num_input, out_channels=num_hidden, kernel_size=kernel, stride=kernel)
+        self.outPut = nn.AvgPool1d(kernel_size=k)
         self.outPut2 = nn.Linear(num_hidden, 1)
 
     def forward(self, x):
@@ -49,15 +50,15 @@ class Net(nn.Module):
         #print(x)
         print("here")
         x = self.outPut(x)
-        print(x)
+        #print(x)
         x = x.view(x.size(0), -1)
         x = self.outPut2(x)
-        print(x)
+        #print(x)
 
         return x
 
 
-t_net = Net(num_hidden=k, num_input=1, kernel=m) #Creating teacher network
+t_net = Net(num_hidden=k, num_input=1, kernel=m, k = k) #Creating teacher network
 
 
 optimizer = torch.optim.SGD(t_net.parameters(), lr=0.2)
@@ -66,9 +67,12 @@ loss_func = nn.MSELoss()
 o = 0
 print("meeeeeeeee")
 for name, param in t_net.state_dict().items():
-    if name == "outPut.weight":
+    if name == "outPut2.weight":
         print("out1")
-        print(param)
+        print(param.size())
+    if name == "hiddenLayer.weight":
+        print("out2")
+        print(param.size())
     o = o + 1
     print(name)
 print("hhhhhhh")

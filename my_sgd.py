@@ -2,9 +2,78 @@ import torch
 #from . import _functional as F
 import torch.nn as nn
 from torch.optim.optimizer import Optimizer, required
+import math
+import torch
+from torch import Tensor
+from typing import List, Optional
+import numpy as np
+import scipy
 
 
-class SGD(Optimizer):
+def sgd(params: List[Tensor],
+        d_p_list: List[Tensor],
+        momentum_buffer_list: List[Optional[Tensor]],
+        weight_decay: float,
+        momentum: float,
+        lr: float,
+        dampening: float,
+        nesterov: bool):
+    r"""Functional API that performs SGD algorithm computation.
+
+    See :class:`~torch.optim.SGD` for details.
+    """
+
+    for i, param in enumerate(params):
+
+        d_p = d_p_list[i]
+        if weight_decay != 0:
+            d_p = d_p.add(param, alpha=weight_decay)
+
+        if momentum != 0:
+            buf = momentum_buffer_list[i]
+
+            if buf is None:
+                buf = torch.clone(d_p).detach()
+                momentum_buffer_list[i] = buf
+            else:
+                buf.mul_(momentum).add_(d_p, alpha=1 - dampening)
+
+            if nesterov:
+                d_p = d_p.add(buf, alpha=momentum)
+            else:
+                d_p = buf
+
+        if i == 0:
+            print("before")
+            print(d_p.size())
+            print("param")
+            print(param.size())
+            print("transpose")
+            sq = (torch.squeeze(param, 1))
+            transpose = torch.transpose(sq, 0, 1)
+            #print(transpose.size())
+            print("multiplication")
+            multiplication = np.matmul(sq, transpose)
+            #multiplication = np.array(multiplication)
+            #multiplication = torch.from_numpy(multiplication)
+            #print(len(multiplication[0]))
+            #print(len(multiplication[1]))
+            print("diag")
+            npI = np.identity(multiplication.size()[0])
+            npI = npI.astype("float32")
+            I = torch.from_numpy(npI)
+            # print(I)
+            # print("t")
+            t = torch.sub(I, multiplication)
+            tmp = np.matmul(t, torch.squeeze(d_p, 1))
+            d_p = torch.unsqueeze(tmp, 1)
+            print("after")
+            print(d_p.size())
+
+        param.add_(d_p, alpha=-lr)
+
+
+class MySGD(Optimizer):
     r"""Implements stochastic gradient descent (optionally with momentum).
 
     Nesterov momentum is based on the formula from
@@ -67,10 +136,10 @@ class SGD(Optimizer):
                         weight_decay=weight_decay, nesterov=nesterov)
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
-        super(SGD, self).__init__(params, defaults)
+        super(MySGD, self).__init__(params, defaults)
 
     def __setstate__(self, state):
-        super(SGD, self).__setstate__(state)
+        super(MySGD, self).__setstate__(state)
         for group in self.param_groups:
             group.setdefault('nesterov', False)
 
@@ -109,7 +178,7 @@ class SGD(Optimizer):
                     else:
                         momentum_buffer_list.append(state['momentum_buffer'])
 
-            F.sgd(params_with_grad,
+            sgd(params_with_grad,
                   d_p_list,
                   momentum_buffer_list,
                   weight_decay,
